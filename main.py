@@ -3,10 +3,10 @@ import yaml
 
 import torch
 
-from parameter_parser import parameter_parser
-from exp.exp_memguard_siamese import ExpClassMemInferSiamese
-from exp.exp_memguard_meta import ExpClassMemInferMeta
-import config
+from face_auditor.parameter_parser import parameter_parser
+from face_auditor.exp.exp_memguard_siamese import ExpClassMemInferSiamese
+from face_auditor.exp.exp_memguard_meta import ExpClassMemInferMeta
+import face_auditor.config as config
 
 
 def config_logger(save_name):

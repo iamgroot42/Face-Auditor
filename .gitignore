@@ -1,2 +1,5 @@
-.vscode
+.vscode/
 *.pyc
+*.egg-info/*
+
+WORKDIR/*

@@ -9,8 +9,7 @@
                 "name": "Launch",
                 "type": "python",
                 "request": "launch",
-                // "program": "${file}",
-                "program": "${workspaceFolder}/main.py",
+                "program": "${file}",
                 "env": {
                     "PYTHONPATH": "${workspaceRoot}"
                 },

@@ -1,6 +1,7 @@
 ## Introduction
 
 This repo contains the implementation of Face-Auditor, which aims to evaluate the privacy leakage in the state-of-the-art few-shot learning pipeline.
+This is a fork of the [original repository](https://github.com/iamgroot42/Face-Auditor), modified to correct some issues in training and evaluation.
 
 ### Code Strcuture
 
@@ -38,8 +39,27 @@ In our paper, we mainly focus on four open-source human face image datasets, the
 
 Other datasets should also work with our Face-Auditor.
 
+First, run the corresponding dataset file directly to download and process data
+
+```
+python <dataset_name>.py
+```
+
+Then, we need to split victim and adversary data.
+
+```
+python preprocess.py
+```
+
 ### Evaluations
 In the following, we give some examples of the experimental configurations, see more details in `parameter_parser.py`.
+
+
+### Training shadow-model directly (say, RelationNet)
+
+```
+python relation_net.py
+```
 
 
 #### Training Shadow and Target Models
