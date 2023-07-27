@@ -1,6 +1,7 @@
 from scipy.special import softmax
 import numpy as np
 import random
+import os
 
 import face_auditor.config as config
 from face_auditor.exp.exp import Exp
@@ -18,6 +19,13 @@ class ExpClassMemInfer(Exp):
         self.attack_train_classes, self.attack_test_classes = None, None
         self.basic_similarity = None
         self.determine_attack_model()
+        
+        # Set attack model path
+        self.attack_model_save_path = config.MODEL_PATH + "attack_model/" + "_".join((self.args['dataset_name'], self.args['shadow_dataset_name'], self.args['target_model'], self.args['attack_model']))
+        self.attack_model_save_path += "%.2f_%.2f_%.2f" % (self.args['victim_ratio'], self.args['victim_ratio_shadow'], self.args['test_ratio'])
+        # Make sure attack model folder exists
+        if not os.path.exists(config.MODEL_PATH + "attack_model/"):
+            os.makedirs(config.MODEL_PATH + "attack_model/")
 
     def determine_attack_model(self):
         if self.args['attack_model'] == 'MLP':
@@ -27,16 +35,15 @@ class ExpClassMemInfer(Exp):
 
     def train_attack_model(self):
         self.logger.info('training attack model')
-        save_name = config.MODEL_PATH + "attack_model/" + "_".join((self.args['dataset_name'], self.args['target_model'], self.args['attack_model']))
         if self.args["is_normalize_similarity"]:
             self.attack_train_data = softmax(self.attack_train_data)
 
         if self.args['attack_model'] == 'MLP':
             self.attack_model = MLP()
-            self.attack_model.train_model(self.attack_train_data, self.attack_train_label, save_name=save_name)
+            self.attack_model.train_model(self.attack_train_data, self.attack_train_label, save_name=self.attack_model_save_path)
         elif self.args['attack_model'] == 'RF':
             self.attack_model = RF()
-            self.attack_model.train_model(self.attack_train_data, self.attack_train_label, min_samples_leaf=10, save_name=save_name)
+            self.attack_model.train_model(self.attack_train_data, self.attack_train_label, min_samples_leaf=10, save_name=self.attack_model_save_path)
 
     def load_attack_model(self):
         self.attack_model.load_model(self.attack_model_save_path)

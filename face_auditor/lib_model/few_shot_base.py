@@ -20,4 +20,6 @@ class FewShotBase:
         self.logger.info('loading model')
         self.logger.info("Current device: %s" % (torch.cuda.current_device()))
         checkpoint = torch.load(save_path, map_location='cpu')
-        self.model.load_state_dict(checkpoint)        
+        self.model.load_state_dict(checkpoint)
+        # Shift to device now
+        self.model.to(self.device)

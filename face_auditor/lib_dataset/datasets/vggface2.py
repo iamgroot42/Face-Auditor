@@ -122,9 +122,6 @@ if __name__ == "__main__":
     ])
     os.chdir("../../")
     root = config.RAW_DATA_PATH
-    VGGFace2(root=root + 'vggface2/', is_download=True)
-    exit(0)
-
     # 1. clean the raw dataset using cleaned_list.txt
     clean_dataset(root + 'vggface2/train/', root + 'vggface2/VGGFACE2_cleandata_5pts.txt')
     # 2. sort sub-folders by the number of images in these sub-folders (reverse order), save in file

@@ -1,6 +1,6 @@
 import logging
 import yaml
-
+import os
 import torch
 
 from face_auditor.parameter_parser import parameter_parser
@@ -21,6 +21,9 @@ def config_logger(save_name):
     ch.setFormatter(formatter)
     logger.addHandler(ch)
 
+    # Make log directory (if does not exist)
+    if not os.path.exists(config.LOG_PATH):
+        os.makedirs(config.LOG_PATH)
     # create file handlers
     fh1 = logging.FileHandler(config.LOG_PATH + save_name + '.txt', 'w')
     fh1.setLevel(logging.INFO)

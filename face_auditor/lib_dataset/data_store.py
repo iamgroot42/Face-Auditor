@@ -1,5 +1,5 @@
 import pickle
-
+import os
 import face_auditor.config as config
 
 
@@ -13,11 +13,11 @@ class DataStore:
     def determine_data_path(self):
         target_model_name = '_'.join(('target', str(self.args['dataset_task']), self.args['dataset_name'], self.args['feature_extractor'],
                                       str(self.args['batch_size']), str(self.args['num_iter']),
-                                      str(self.args['way']), str(self.args['shot']), str(self.args['image_size'])))
+                                      str(self.args['way']), str(self.args['shot']), str(self.args['image_size']), "%.2f_%.2f" % (self.args['victim_ratio'], self.args['test_ratio'])))
         shadow_model_name = '_'.join(('shadow', str(self.args['dataset_task']), self.args['shadow_dataset_name'], self.args['feature_extractor'],
                                       str(self.args['batch_size']), str(self.args['num_iter']),
-                                      str(self.args['way']), str(self.args['shot']), str(self.args['image_size'])))
-        attack_train_data = '_'.join((self.args['dataset_name'], self.args["shadow_model"], str(self.args['probe_shot']), "attack_train_data"))
+                                      str(self.args['way']), str(self.args['shot']), str(self.args['image_size']), "%.2f_%.2f" % (self.args['victim_ratio_shadow'], self.args['test_ratio'])))
+        attack_train_data = '_'.join((self.args['shadow_dataset_name'], self.args["shadow_model"], str(self.args['probe_shot']), "attack_train_data"))
         attack_test_data = '_'.join((self.args['dataset_name'], self.args["target_model"], str(self.args['probe_shot']), "attack_test_data"))
 
         if self.args['is_disjoint_train']:
@@ -50,8 +50,22 @@ class DataStore:
         if self.args['is_noise_defense']:
             attack_train_data = "_".join((attack_train_data, "Noise"))
             attack_test_data = "_".join((attack_test_data, "Noise"))
+        
+        # Add ratios-related information
+        attack_train_data = "_".join((attack_train_data, "%.2f_%.2f" % (self.args['victim_ratio_shadow'], self.args['test_ratio'])))
+        attack_test_data = "_".join((attack_test_data, "%.2f_%.2f" % (self.args['victim_ratio'], self.args['test_ratio'])))
 
-        self.attack_train_data = config.ATTACK_DATA_PATH + self.args['dataset_name'] + "/" + attack_train_data
+        def conditional_make(x):
+            if not os.path.exists(x):
+                os.makedirs(x)
+
+        # Make sure attack data path and model path folders exist        
+        conditional_make(config.ATTACK_DATA_PATH + self.args['shadow_dataset_name'])
+        conditional_make(config.ATTACK_DATA_PATH + self.args['dataset_name'])
+        conditional_make(config.MODEL_PATH + self.args['target_model'])
+        conditional_make(config.MODEL_PATH + self.args['shadow_model'])
+
+        self.attack_train_data = config.ATTACK_DATA_PATH + self.args['shadow_dataset_name'] + "/" + attack_train_data
         self.attack_test_data = config.ATTACK_DATA_PATH + self.args['dataset_name'] + "/" + attack_test_data
         self.target_model_file = config.MODEL_PATH + self.args['target_model'] + "/" + target_model_name
         self.shadow_model_file = config.MODEL_PATH + self.args['target_model'] + "/" + shadow_model_name
@@ -59,8 +73,12 @@ class DataStore:
     def generate_folder(self):
         pass
 
-    def load_data(self):
-        data_path = config.PROCESSED_DATA_PATH + str(self.args['image_size']) + "/" + "_".join((str(self.args['dataset_task']), self.args['dataset_name']))
+    def load_data(self, dataset: str = None, ratio: float = None):
+        dataset_to_load = self.args['dataset_name'] if dataset is None else dataset
+        ratio_to_load = self.args['victim_ratio'] if ratio is None else ratio
+        data_path = config.PROCESSED_DATA_PATH + str(self.args['image_size']) + "/" + "_".join((str(self.args['dataset_task']), dataset_to_load))
+        # Add ratio-related information to split as well
+        data_path += "_%.2f_%.2f" % (ratio_to_load, self.args['test_ratio'])
         if self.args['is_adv_defense']:
             data_path += "_" + self.args['fawkes_mode']
         print(data_path)

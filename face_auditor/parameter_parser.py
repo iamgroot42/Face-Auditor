@@ -17,10 +17,11 @@ def parameter_parser():
 
     ######################### general parameters ##################################
     parser.add_argument('--cuda', type=int, default=0, help='specify gpu')
-    parser.add_argument('--exp', type=str, default='class_mem_infer_siamese',
+    parser.add_argument('--exp', type=str, default='class_mem_infer_meta',
                         choices=['class_mem_infer_siamese', 'class_mem_infer_meta'])
     parser.add_argument('--target_model', type=str, default='relationnet', choices=['protonet', 'relationnet', 'relationnet'])
-    parser.add_argument('--shadow_model', type=str, default='siamesenet', choices=['protonet', 'relationnet', 'siamesenet'])
+    parser.add_argument('--shadow_model', type=str, default='relationnet',
+                        choices=['protonet', 'relationnet', 'siamesenet'])
 
     parser.add_argument('--num_threads', type=int, default=1)
     parser.add_argument('--feature_extractor', type=str, default='SCNN',
@@ -38,8 +39,8 @@ def parameter_parser():
     parser.add_argument('--dataset_task', type=int, default=5, help=[0, 1, 2, 3, 4, 5])
     parser.add_argument('--num_of_samples', type=int, default=100, choices=[20, 32, 64, 96, 100])
     parser.add_argument('--victim_ratio', type=float, default=0.5, help='Ratio of data to be used for victim. Defaults to 0.5')
+    parser.add_argument('--victim_ratio_shadow', type=float, default=0.5, help='Ratio of data to be used for victim (shadow model loading). Defaults to 0.5')
     parser.add_argument('--test_ratio', type=float, default=0.2, help='Ratio of data split to use for testing. Defaults to 0.2')
-    parser.add_argument('--audit_ratio', type=float, default=0.1, help='Ratio of subjects to use for auditing. Defaults to 0.1')
 
     ########################## probe controlling parameters ##############################
     parser.add_argument('--num_runs', type=int, default=1)

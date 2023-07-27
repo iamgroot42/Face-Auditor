@@ -85,25 +85,29 @@ class Preprocess:
 
         self.target_train_dset, self.target_test_dset = None, None
         self.shadow_train_dset, self.shadow_test_dset = None, None
-        if target_test_indices is not None:
+        self.target_train_mem_dset, self.target_train_nonmem_dset = None, None
+        self.shadow_train_mem_dset, self.shadow_train_nonmem_dset = None, None
+        
+        # Any target dataa present
+        if target_train_indices is not None:
             self.target_train_dset = FilteredMetaDataset(self.dataset, target_train_indices)
             self.target_test_dset = FilteredMetaDataset(self.dataset, target_test_indices)
+            self.target_train_mem_dset = SplitMetaDataset(self.target_train_dset, train_mem_indices)
+            self.target_train_nonmem_dset = SplitMetaDataset(self.target_train_dset, train_nonmem_indices)
+
+        # Any shadow data present
         if shadow_train_indices is not None:
             self.shadow_train_dset = FilteredMetaDataset(self.dataset, shadow_train_indices)
             self.shadow_test_dset = FilteredMetaDataset(self.dataset, shadow_test_indices)
-
-        self.target_train_mem_dset, self.target_train_nonmem_dset = None, None
-        self.shadow_train_mem_dset, self.shadow_train_nonmem_dset = None, None
-        if train_mem_indices is not None:
-            self.target_train_mem_dset = SplitMetaDataset(self.target_train_dset, train_mem_indices)
-            self.target_train_nonmem_dset = SplitMetaDataset(self.target_train_dset, train_nonmem_indices)
-        if train_mem_indices is not None:
             self.shadow_train_mem_dset = SplitMetaDataset(self.shadow_train_dset, train_mem_indices)
             self.shadow_train_nonmem_dset = SplitMetaDataset(self.shadow_train_dset, train_nonmem_indices)
 
+
     def save_data(self):
         self.logger.info('saving data')
-        data_path = config.PROCESSED_DATA_PATH + str(self.args['image_size']) + "/" + "_".join((str(self.args['dataset_task']), self.dataset_name ))
+        data_path = config.PROCESSED_DATA_PATH + str(self.args['image_size']) + "/" + "_".join((str(self.args['dataset_task']), self.dataset_name))
+        # Add ratio-related information to split as well
+        data_path += "_%.2f_%.2f" % (self.args['victim_ratio'], self.args['test_ratio'])
         if self.args['is_adv_defense']:
             data_path = data_path + "_" + self.args['fawkes_mode']
         print(data_path)
@@ -248,7 +252,8 @@ if __name__ == '__main__':
                         level=logging.DEBUG)
     args = parameter_parser()
     # dataset_name_list = ['miniimagenet', 'full_omniglot', 'fc100', 'lfw', 'webface', 'vggface2', 'umdfaces', 'celeba']
-    dataset_name_list = ['celeba']
+    # dataset_name_list = ['celeba']
+    dataset_name_list = ['vggface2']
     for dataset_name in dataset_name_list:
         print(os.getcwd())
         process = Preprocess(args, dataset_name)
