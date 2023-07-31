@@ -79,6 +79,7 @@ def parameter_parser():
     parser.add_argument('--train_num_task', type=int, default=100)
     parser.add_argument('--test_num_query', type=int, default=5)
     parser.add_argument('--test_num_task', type=int, default=80)
+    parser.add_argument('--gradient_clip', type=float, default=0.5, help='Value to clip the gradient to. Set to 0 to disable. Defaults to 0.5')
 
     ########################## query/probe parameters ###############################
     parser.add_argument('--is_sort_query', type=str2bool, default=True, help='sort queries by similarity score')

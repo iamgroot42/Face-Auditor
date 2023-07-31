@@ -104,8 +104,9 @@ class RelationNet(FewShotBase):
 
                 loss.backward()
 
-                torch.nn.utils.clip_grad_norm_(self.feat_encoder.parameters(), 0.5)
-                torch.nn.utils.clip_grad_norm_(self.model.parameters(), 0.5)
+                if self.args['gradient_clip']:
+                    torch.nn.utils.clip_grad_norm_(self.feat_encoder.parameters(), self.args['gradient_clip'])
+                    torch.nn.utils.clip_grad_norm_(self.model.parameters(), self.args['gradient_clip'])
 
                 feat_encoder_optim.step()
                 relation_net_optim.step()
@@ -116,14 +117,14 @@ class RelationNet(FewShotBase):
                 
             # Evaluate model
             test_acc = self.evaluate_model(test_dset)
-                
+
             iterator.set_description("Epoch %d | Train Loss: %.3f | Train Acc: %.3f | Test Acc: %.3f" % (epoch + 1,
                 running_loss / self.args['train_num_task'],
                 running_acc / self.args['train_num_task'],
                 test_acc))
 
-            feat_encoder_scheduler.step(epoch)
-            relation_net_scheduler.step(epoch)
+            feat_encoder_scheduler.step()
+            relation_net_scheduler.step()
 
             train_acc = self.evaluate_model(train_dset)
             self.logger.debug('train acc: %s | test acc: %s' % (train_acc, test_acc,))
