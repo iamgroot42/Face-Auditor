@@ -78,33 +78,37 @@ class ExpClassMemInferMeta(ExpClassMemInfer):
 
     def train_target_model(self):
         self.logger.info('training target model')
-        train_dset = TaskDataset(self.target_train_mem_dset, task_transforms=self.train_transforms)
         test_dset = TaskDataset(self.target_test_dset, task_transforms=self.test_transforms, num_tasks=self.args['test_num_task'])
 
         if self.args['is_train_target']:
+            train_dset = TaskDataset(self.target_train_mem_dset, task_transforms=self.train_transforms)
             if self.args['is_dp_defense']:
                 self.target_train_precision, self.target_test_precision, self.epsilon = self.target_model.train_model(train_dset, test_dset)
             else:
                 self.target_train_precision, self.target_test_precision = self.target_model.train_model(train_dset, test_dset)
-
+                print(f"target final | train: {self.target_train_precision}, test: {self.target_test_precision}")
             self.data_store.save_target_model(self.target_model)
         else:
             self.data_store.load_target_model(self.target_model)
             self.target_test_precision = self.target_model.evaluate_model(test_dset)
+            print(f"target final | test: {self.target_test_precision}")
 
     def train_shadow_model(self):
         self.logger.info('training shadow model')
-        train_dset = TaskDataset(self.shadow_train_mem_dset, task_transforms=self.train_transforms)
         test_dset = TaskDataset(self.shadow_test_dset, task_transforms=self.test_transforms, num_tasks=self.args['test_num_task'])
 
-        if self.args['is_train_target']:
+        if self.args['is_train_shadow']:
+            train_dset = TaskDataset(self.shadow_train_mem_dset, task_transforms=self.train_transforms)
             if self.args['is_dp_defense']:
                 self.shadow_train_precision, self.shadow_test_precision, self.shadow_epsilon = self.shadow_model.train_model(train_dset, test_dset)
             else:
                 self.shadow_train_precision, self.shadow_test_precision = self.shadow_model.train_model(train_dset, test_dset)
+            print(f"shadow final | train: {self.shadow_train_precision}, test: {self.shadow_test_precision}")
             self.data_store.save_shadow_model(self.shadow_model)
         else:
             self.data_store.load_shadow_model(self.shadow_model)
+            self.shadow_test_precision = self.shadow_model.evaluate_model(test_dset)
+            print(f"shadow final | test: {self.shadow_test_precision}")
 
     def probe_target_model(self):
         self.logger.info('probing target model')

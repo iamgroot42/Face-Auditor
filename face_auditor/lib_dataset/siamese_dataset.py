@@ -78,7 +78,7 @@ class SiameseProbe(Dataset):
         self.img1 = None
         self.c1 = None
         self.selected_idx = None
-        self.device = torch.device('cuda:6' if torch.cuda.is_available() else 'cpu')
+        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
         self.img_sim = ImageSimilarity(args=args)
 

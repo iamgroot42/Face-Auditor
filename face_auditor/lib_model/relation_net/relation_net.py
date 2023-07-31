@@ -114,15 +114,18 @@ class RelationNet(FewShotBase):
                     epsilon, best_alpha = relation_net_optim.privacy_engine.get_privacy_spent(self.args['delta'])
                     self.logger.info("Epoch: %s | epsilon: %s | best alpha: %d" % (epoch, epsilon, best_alpha))
                 
-            iterator.set_description("Epoch %d | Train Loss: %.3f | Train Acc: %.3f" % (epoch + 1,
+            # Evaluate model
+            test_acc = self.evaluate_model(test_dset)
+                
+            iterator.set_description("Epoch %d | Train Loss: %.3f | Train Acc: %.3f | Test Acc: %.3f" % (epoch + 1,
                 running_loss / self.args['train_num_task'],
-                running_acc / self.args['train_num_task']))
+                running_acc / self.args['train_num_task'],
+                test_acc))
 
             feat_encoder_scheduler.step(epoch)
             relation_net_scheduler.step(epoch)
 
             train_acc = self.evaluate_model(train_dset)
-            test_acc = self.evaluate_model(test_dset)
             self.logger.debug('train acc: %s | test acc: %s' % (train_acc, test_acc,))
 
         if self.args['is_dp_defense']:
@@ -292,7 +295,6 @@ class RelationNet(FewShotBase):
 
     def probe_adapt(self):
         pass
-
 
 
 if __name__ == '__main__':

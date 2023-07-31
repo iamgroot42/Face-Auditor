@@ -68,7 +68,7 @@ class DataStore:
         self.attack_train_data = config.ATTACK_DATA_PATH + self.args['shadow_dataset_name'] + "/" + attack_train_data
         self.attack_test_data = config.ATTACK_DATA_PATH + self.args['dataset_name'] + "/" + attack_test_data
         self.target_model_file = config.MODEL_PATH + self.args['target_model'] + "/" + target_model_name
-        self.shadow_model_file = config.MODEL_PATH + self.args['target_model'] + "/" + shadow_model_name
+        self.shadow_model_file = config.MODEL_PATH + self.args['shadow_model'] + "/" + shadow_model_name
 
     def generate_folder(self):
         pass

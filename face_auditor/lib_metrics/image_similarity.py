@@ -20,7 +20,7 @@ import itertools
 class ImageSimilarity:
     def __init__(self, args):
         self.args = args
-        self.device = torch.device('cuda:' + str(args['cuda']) if torch.cuda.is_available() else 'cpu')
+        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         if self.args['image_similarity_name'] == 'lpips':
             self.LOSS_FN_VGG = lpips.LPIPS(net='vgg', version="0.1").to(self.device)
 
