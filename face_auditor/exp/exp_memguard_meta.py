@@ -95,14 +95,16 @@ class ExpClassMemInferMeta(ExpClassMemInfer):
 
     def train_shadow_model(self):
         self.logger.info('training shadow model')
-        test_dset = TaskDataset(self.shadow_test_dset, task_transforms=self.test_transforms, num_tasks=self.args['test_num_task'])
+        test_dset = TaskDataset(self.shadow_test_dset, task_transforms=self.test_transforms, num_tasks=self.args['test_num_task_adv'])
 
         if self.args['is_train_shadow']:
             train_dset = TaskDataset(self.shadow_train_mem_dset, task_transforms=self.train_transforms)
             if self.args['is_dp_defense']:
-                self.shadow_train_precision, self.shadow_test_precision, self.shadow_epsilon = self.shadow_model.train_model(train_dset, test_dset)
+                self.shadow_train_precision, self.shadow_test_precision, self.shadow_epsilon = self.shadow_model.train_model(train_dset, test_dset,
+                                                                                                                             train_num_task=self.args['train_num_task_adv'])
             else:
-                self.shadow_train_precision, self.shadow_test_precision = self.shadow_model.train_model(train_dset, test_dset)
+                self.shadow_train_precision, self.shadow_test_precision = self.shadow_model.train_model(train_dset, test_dset,
+                                                                                                        train_num_task=self.args['train_num_task_adv'])
             print(f"shadow final | train: {self.shadow_train_precision}, test: {self.shadow_test_precision}")
             self.data_store.save_shadow_model(self.shadow_model)
         else:
@@ -159,7 +161,6 @@ class ExpClassMemInferMeta(ExpClassMemInfer):
                 self.data_store.save_attack_test_data((self.attack_test_data, self.attack_test_label, self.attack_test_classes))
         else:
             self.attack_test_data, self.attack_test_label = self.data_store.load_attack_test_data()
-
 
     def probe_shadow_model(self):
         self.logger.info('probing shadow model')

@@ -60,7 +60,7 @@ class RelationNet(FewShotBase):
         return model
 
 
-    def train_model(self, train_dset, test_dset):
+    def train_model(self, train_dset, test_dset, train_num_task: int = None):
         self.feat_encoder.train()
         self.model.train()
 
@@ -81,6 +81,8 @@ class RelationNet(FewShotBase):
                 secure_rng=self.args['secure_rng'],
             )
             privacy_engine.attach(relation_net_optim)
+        
+        train_num_task_use = train_num_task if train_num_task is not None else self.args['train_num_task']
 
         iterator = tqdm(range(self.args['train_num_epochs']))
         for epoch in iterator:
@@ -89,7 +91,7 @@ class RelationNet(FewShotBase):
             self.logger.info('epoch: %s' % (epoch,))
 
             running_loss, running_acc = 0, 0
-            for i in range(self.args['train_num_task']):
+            for i in range(train_num_task_use):
                 data, labels = next(iter(train_loader))
 
                 _, loss, tacc = self.fast_adapt(data, labels, self.args['way'], self.args['shot'],

@@ -78,6 +78,8 @@ def parameter_parser():
     parser.add_argument('--train_num_query', type=int, default=5)
     parser.add_argument('--train_num_task', type=int, default=100)
     parser.add_argument('--test_num_query', type=int, default=5)
+    parser.add_argument('--train_num_task_adv', type=int, default=100)
+    parser.add_argument('--test_num_task_adv', type=int, default=5)
     parser.add_argument('--test_num_task', type=int, default=80)
     parser.add_argument('--gradient_clip', type=float, default=0.5, help='Value to clip the gradient to. Set to 0 to disable. Defaults to 0.5')
 
@@ -107,7 +109,7 @@ def parameter_parser():
     parser.add_argument('--fawkes_mode', type=str, default="none", help=['none', 'low', 'mid', 'high'])
 
     ########################## noise (output) defense parameters ##############################
-    parser.add_argument('--is_noise_defense', type=str2bool, default=True)
+    parser.add_argument('--is_noise_defense', type=str2bool, default=False)
     parser.add_argument('--noise_std', type=float, default=0.8)
 
     ########################## memguard (adaptive) defense parameters ##############################
