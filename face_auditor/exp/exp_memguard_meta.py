@@ -1,7 +1,6 @@
 import logging
 
 import numpy as np
-from scipy.special import softmax
 
 from face_auditor.exp.exp_class_mem_infer import ExpClassMemInfer
 from face_auditor.lib_model.proto_net.proto_net import ProtoNet

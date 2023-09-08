@@ -252,8 +252,8 @@ if __name__ == '__main__':
                         level=logging.DEBUG)
     args = parameter_parser()
     # dataset_name_list = ['miniimagenet', 'full_omniglot', 'fc100', 'lfw', 'webface', 'vggface2', 'umdfaces', 'celeba']
-    # dataset_name_list = ['celeba']
-    dataset_name_list = ['vggface2']
+    dataset_name_list = ['celeba']
+    # dataset_name_list = ['vggface2']
     for dataset_name in dataset_name_list:
         print(os.getcwd())
         process = Preprocess(args, dataset_name)

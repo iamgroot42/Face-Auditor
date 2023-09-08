@@ -315,10 +315,13 @@ class ProbeDatasetSort(Dataset):
         # sort the candidate by image-level similarity
         import operator
         sort_images = dict(sorted(image_similarities.items(), key=operator.itemgetter(1),reverse=True))
-        query_indices = list(sort_images.keys())[-self.args['probe_num_query']:]
+        # Fixed- was picking lowest-similarity images, should be high-similarity images
+        # BEFORE: query_indices = list(sort_images.keys())[-self.args['probe_num_query']:]
+        # AFTER:
+        query_indices = list(sort_images.keys())[:self.args['probe_num_query']]
         probe_similarity = []
-        for query_indice in query_indices:
-            probe_similarity.append(image_similarities[query_indice])
+        for query_index in query_indices:
+            probe_similarity.append(image_similarities[query_index])
         return proto_indices+query_indices, probe_similarity
 
     def _image_level_similarity(self, img1, img2):
