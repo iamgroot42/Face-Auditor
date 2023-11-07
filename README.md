@@ -1,20 +1,27 @@
 ## Introduction
 
 This repo contains the implementation of Face-Auditor, which aims to evaluate the privacy leakage in the state-of-the-art few-shot learning pipeline.
-This is a fork of the [original repository](https://github.com/iamgroot42/Face-Auditor), modified to correct some issues in training and evaluation.
+This is a fork of the [original repository](https://github.com/iamgroot42/Face-Auditor), modified to correct issues in training and evaluation
 
-### Code Strcuture
+### Issues fixed
+
+- [Using target data for probing shadow models](https://github.com/MinChen00/Face-Auditor/issues/9): Because of a typo, the code seems to use target dataa for shadow model probing.
+- [Missing .eval() calls for models](https://github.com/MinChen00/Face-Auditor/issues/1): This is not an issue introduced by the original codebase, but rather an issue with the original implementation of RelationNet itself (mentioned [here](https://github.com/floodsung/LearningToCompare_FSL/issues/12)). Along these lines, m=1 was used for batch-norm layers for RelationNet, and has been changed to 0.1 (default momentum).
+- [Minor issue for the case where queries are not sorted](https://github.com/MinChen00/Face-Auditor/issues/9) : Does not affect main results (since sorting is True).
+
+### Code Structure
 
 ```
 .
-├── config.py
-├── exp
-├── lib_classifer
-├── lib_dataset
-├── lib_metrics
-├── lib_model
+├──face_auditor
+    ├── exp
+    ├── lib_classifer
+    ├── lib_dataset
+    ├── lib_metrics
+    ├── lib_model
+    ├── config.py
+    ├── parameter_parser.py
 ├── main.py
-├── parameter_parser.py
 └── README.md
 ```
 

@@ -87,8 +87,8 @@ class Preprocess:
         self.shadow_train_dset, self.shadow_test_dset = None, None
         self.target_train_mem_dset, self.target_train_nonmem_dset = None, None
         self.shadow_train_mem_dset, self.shadow_train_nonmem_dset = None, None
-        
-        # Any target dataa present
+
+        # Any target data present
         if target_train_indices is not None:
             self.target_train_dset = FilteredMetaDataset(self.dataset, target_train_indices)
             self.target_test_dset = FilteredMetaDataset(self.dataset, target_test_indices)
@@ -195,7 +195,7 @@ class Preprocess:
         }
         topn=TOPN[self.args['dataset_task']]
         n_images=NImages[self.args['dataset_task']]
-        dataset = UmdFaces(root=self.raw_data_path + 'images/images_low/', transform=self.transform, topn=topn, num_imges=n_images)
+        dataset = UmdFaces(root=os.path.join(self.raw_data_path, 'images/images_low/'), transform=self.transform, topn=topn, num_imges=n_images)
         return MetaDataset(dataset), topn, n_images
 
     def _load_vggface2(self):
@@ -252,8 +252,7 @@ if __name__ == '__main__':
                         level=logging.DEBUG)
     args = parameter_parser()
     # dataset_name_list = ['miniimagenet', 'full_omniglot', 'fc100', 'lfw', 'webface', 'vggface2', 'umdfaces', 'celeba']
-    dataset_name_list = ['celeba']
-    # dataset_name_list = ['vggface2']
+    dataset_name_list = ['umdfaces'] #['vggface2']
     for dataset_name in dataset_name_list:
         print(os.getcwd())
         process = Preprocess(args, dataset_name)

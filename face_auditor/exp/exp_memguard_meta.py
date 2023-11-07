@@ -16,6 +16,8 @@ class ExpClassMemInferMeta(ExpClassMemInfer):
         self.args = args
         self.determine_model()
         attack_acc, attack_auc, attack_precision, attack_recall, attack_f1_score, attack_FPR = [],[],[],[],[],[]
+        shadow_test_acc, target_test_acc = [], []
+        shadow_train_acc, target_train_acc = [], []
 
         for run in range(self.args['num_runs']):
             self.train_target_model()
@@ -37,7 +39,13 @@ class ExpClassMemInferMeta(ExpClassMemInfer):
             attack_f1_score.append(self.attack_f1_score)
             attack_FPR.append(self.attack_FPR)
             # self.visualize()
+            shadow_train_acc.append(self.shadow_train_precision)
+            shadow_test_acc.append(self.shadow_test_precision)
 
+            target_train_acc.append(self.target_train_precision)
+            target_test_acc.append(self.target_test_precision)
+
+        # Attack metrics
         self.attack_acc_avg = np.average(attack_acc)
         self.attack_auc_avg = np.average(attack_auc)
         self.attack_precision_avg = np.average(attack_precision)
@@ -50,6 +58,16 @@ class ExpClassMemInferMeta(ExpClassMemInfer):
         self.attack_f1_score_std = np.std(attack_f1_score)
         self.attack_FPR_avg = np.average(attack_FPR)
         self.attack_FPR_std = np.std(attack_FPR)
+        # Model train acc metrics
+        self.shadow_train_acc_avg = np.average(shadow_train_acc)
+        self.shadow_train_acc_std = np.std(shadow_train_acc)
+        self.target_train_acc_avg = np.average(target_train_acc)
+        self.target_train_acc_std = np.std(target_train_acc)
+        # Model test acc metrics
+        self.shadow_test_acc_avg = np.average(shadow_test_acc)
+        self.shadow_test_acc_std = np.std(shadow_test_acc)
+        self.target_test_acc_avg = np.average(target_test_acc)
+        self.target_test_acc_std = np.std(target_test_acc)
 
         if self.args['is_save_results']:
             self.save_results()
@@ -115,10 +133,11 @@ class ExpClassMemInferMeta(ExpClassMemInfer):
         self.logger.info('probing target model')
 
         if self.args['is_generate_probe']:
-            if not self.args['is_sort_query']:
-                probe_class_to_call = ProbeDataset
-            else:
+            if self.args['is_sort_query']:
                 probe_class_to_call = ProbeDatasetSort
+            else:
+                probe_class_to_call = ProbeDataset
+                
             train_probe_dset = probe_class_to_call(self.target_train_nonmem_dset, self.target_test_dset, self.args)
             test_probe_dset = probe_class_to_call(self.target_test_dset, self.target_test_dset, self.args)
 
@@ -165,12 +184,17 @@ class ExpClassMemInferMeta(ExpClassMemInfer):
         self.logger.info('probing shadow model')
 
         if self.args['is_generate_probe']:
-            if not self.args['is_sort_query']:
-                probe_class_to_call = ProbeDataset
-            else:
+            if self.args['is_sort_query']:
                 probe_class_to_call = ProbeDatasetSort
-            train_probe_dset = probe_class_to_call(self.shadow_train_nonmem_dset, self.shadow_test_dset, self.args)
-            test_probe_dset = probe_class_to_call(self.shadow_test_dset, self.shadow_test_dset, self.args)
+            else:
+                probe_class_to_call = ProbeDataset
+
+            if self.args['incorrect_sorted_queries']:
+                train_probe_dset = probe_class_to_call(self.target_train_nonmem_dset, self.target_test_dset, self.args)
+                test_probe_dset = probe_class_to_call(self.target_test_dset, self.target_test_dset, self.args)
+            else:
+                train_probe_dset = probe_class_to_call(self.shadow_train_nonmem_dset, self.shadow_test_dset, self.args)
+                test_probe_dset = probe_class_to_call(self.shadow_test_dset, self.shadow_test_dset, self.args)
 
             if self.args['is_known_embedding']:
                 train_embeddings, train_classes = self.shadow_model.generate_embeddings(train_probe_dset)
@@ -212,6 +236,7 @@ class ExpClassMemInferMeta(ExpClassMemInfer):
 
         upload_data['is_memguard_defense'] = self.args['is_memguard_defense']
 
+        # Attack metrics
         upload_data['attack_acc'] = self.attack_acc_avg
         upload_data['attack_auc'] = self.attack_auc_avg
         upload_data['attack_precision'] = self.attack_precision_avg
@@ -226,4 +251,18 @@ class ExpClassMemInferMeta(ExpClassMemInfer):
         upload_data['attack_class_acc_std'] = self.attack_acc_std
         upload_data['attack_FPR'] = self.attack_FPR_avg
         upload_data['attack_FPR_std'] = self.attack_FPR_std
+
+        # Test accs
+        upload_data['target_test_acc'] = self.target_test_acc_avg
+        upload_data['target_test_acc_std'] = self.target_test_acc_std
+        upload_data['shadow_test_acc'] = self.shadow_test_acc_avg
+        upload_data['shadow_test_acc_std'] = self.shadow_test_acc_std
+
+        # Train accs
+        upload_data['target_train_acc'] = self.target_train_acc_avg
+        upload_data['target_train_acc_std'] = self.target_train_acc_std
+        upload_data['shadow_train_acc'] = self.shadow_train_acc_avg
+        upload_data['shadow_train_acc_std'] = self.shadow_train_acc_std
+
+
         self.write_results(upload_data)

@@ -314,11 +314,9 @@ class ProbeDatasetSort(Dataset):
 
         # sort the candidate by image-level similarity
         import operator
+        # Note, currently seems to reverse-sort (so most similar are first), but then picks images from the last
         sort_images = dict(sorted(image_similarities.items(), key=operator.itemgetter(1),reverse=True))
-        # Fixed- was picking lowest-similarity images, should be high-similarity images
-        # BEFORE: query_indices = list(sort_images.keys())[-self.args['probe_num_query']:]
-        # AFTER:
-        query_indices = list(sort_images.keys())[:self.args['probe_num_query']]
+        query_indices = list(sort_images.keys())[-self.args['probe_num_query']:]
         probe_similarity = []
         for query_index in query_indices:
             probe_similarity.append(image_similarities[query_index])

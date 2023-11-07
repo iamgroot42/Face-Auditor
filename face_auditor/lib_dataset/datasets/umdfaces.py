@@ -127,8 +127,7 @@ if __name__ == "__main__":
         transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
     ])
     os.chdir("../../")
-    root = config.WORKDIR + config.RAW_DATA_PATH
-
+    root = config.RAW_DATA_PATH
     # 1. clean the raw dataset using cleaned_list.txt
     # clean_dataset(root + 'umdfaces/', root + 'umdfaces/images/cleaned_list.txt')
     # 2. sort sub-folders by the number of images in these sub-folders (reverse order)

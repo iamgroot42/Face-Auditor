@@ -55,7 +55,7 @@ class ExpClassMemInfer(Exp):
             self.attack_test_data = softmax(self.attack_test_data)
         self.attack_acc = self.attack_model.test_model_acc(self.attack_train_data, self.attack_train_label)
         self.attack_auc = self.attack_model.test_model_auc(self.attack_train_data, self.attack_train_label)
-        self.attack_f1_score, self.attack_recall, self.attack_precision, self.attack_FPR = self.attack_model.test_model_metrics(self.attack_train_data, self.attack_test_label)
+        self.attack_f1_score, self.attack_recall, self.attack_precision, self.attack_FPR = self.attack_model.test_model_metrics(self.attack_train_data, self.attack_train_label)
 
         
         if self.args['target_model'] == "siamesenet":

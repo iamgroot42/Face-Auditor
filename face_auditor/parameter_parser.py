@@ -15,6 +15,11 @@ def str2bool(v):
 def parameter_parser():
     parser = argparse.ArgumentParser()
 
+    ################## comparison parameters (for recreating old code-base) #######
+    parser.add_argument('--improper_evals', type=str2bool, default=False, help='Use improper evaluation (not setting .eval() calls when training')
+    parser.add_argument('--improper_evals_attack_time', type=str2bool, default=False, help='Use improper evaluation (not setting .eval() calls when probing')
+    parser.add_argument('--incorrect_sorted_queries', type=str2bool, default=False, help='Use shadow data for probing shadow models, not target data')
+
     ######################### general parameters ##################################
     parser.add_argument('--cuda', type=int, default=0, help='specify gpu')
     parser.add_argument('--exp', type=str, default='class_mem_infer_meta',
@@ -29,13 +34,13 @@ def parameter_parser():
     parser.add_argument('--attack_model', type=str, default='MLP', choices=['MLP', 'RF', 'AUC'])
     parser.add_argument('--is_train_attack', type=str2bool, default=True)
     parser.add_argument('--database_table_name', type=str, default='default')
-    
+
    ######################### dataset related parameters ##################################
     parser.add_argument('--dataset_name', type=str, default='celeba',
                         choices=['vggface2', 'webface', 'umdfaces', 'celeba'])
     parser.add_argument('--shadow_dataset_name', type=str, default='celeba',
                         choices=['vggface2', 'webface', 'umdfaces', 'celeba'])
-    parser.add_argument('--image_size', type=int, default=96, choices=[32, 64, 96, 112])
+    parser.add_argument('--image_size', type=int, default=32, choices=[32, 64, 96, 112])
     parser.add_argument('--dataset_task', type=int, default=5, help=[0, 1, 2, 3, 4, 5])
     parser.add_argument('--num_of_samples', type=int, default=100, choices=[20, 32, 64, 96, 100])
     parser.add_argument('--victim_ratio', type=float, default=0.5, help='Ratio of data to be used for victim. Defaults to 0.5')
@@ -76,11 +81,13 @@ def parameter_parser():
     ########################## target meta parameters ###############################
     parser.add_argument('--train_num_epochs', type=int, default=100)
     parser.add_argument('--train_num_query', type=int, default=5)
-    parser.add_argument('--train_num_task', type=int, default=100)
     parser.add_argument('--test_num_query', type=int, default=5)
+
+    parser.add_argument('--train_num_task', type=int, default=100)
     parser.add_argument('--train_num_task_adv', type=int, default=100)
-    parser.add_argument('--test_num_task_adv', type=int, default=5)
+    
     parser.add_argument('--test_num_task', type=int, default=80)
+    parser.add_argument('--test_num_task_adv', type=int, default=80)
     parser.add_argument('--gradient_clip', type=float, default=0.5, help='Value to clip the gradient to. Set to 0 to disable. Defaults to 0.5')
 
     ########################## query/probe parameters ###############################

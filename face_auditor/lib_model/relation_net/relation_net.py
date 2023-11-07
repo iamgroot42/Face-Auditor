@@ -38,7 +38,8 @@ class RelationNet(FewShotBase):
             self.feat_encoder = FeatureEncoder(self.args['feature_extractor'], in_channels=3).to(self.device)
         else:
             raise Exception("Unsupported dataset.")
-        self.model = RelationNetwork(self.feat_dim, self.relation_dim).to(self.device)
+        self.model = RelationNetwork(
+            self.feat_dim, self.relation_dim, self.args['image_size']).to(self.device)
         if self.args['is_dp_defense']:
             self.model = self.convert_layers(self.model, nn.BatchNorm2d, nn.GroupNorm, True, num_groups=2).to(self.device) # for DP
             # self.model = module_modification.convert_batchnorm_modules(self.model).to(self.device)
@@ -90,15 +91,11 @@ class RelationNet(FewShotBase):
             self.feat_encoder.train()
             self.logger.info('epoch: %s' % (epoch,))
 
-            running_loss, running_acc = 0, 0
             for i in range(train_num_task_use):
                 data, labels = next(iter(train_loader))
 
                 _, loss, tacc = self.fast_adapt(data, labels, self.args['way'], self.args['shot'],
                                              self.args['train_num_query'])
-                with torch.no_grad():
-                    running_loss += loss.item()
-                    running_acc += tacc.item()
 
                 # training
                 self.feat_encoder.zero_grad()
@@ -116,19 +113,15 @@ class RelationNet(FewShotBase):
                 if self.args['is_dp_defense']:
                     epsilon, best_alpha = relation_net_optim.privacy_engine.get_privacy_spent(self.args['delta'])
                     self.logger.info("Epoch: %s | epsilon: %s | best alpha: %d" % (epoch, epsilon, best_alpha))
-                
+
+            feat_encoder_scheduler.step(epoch)
+            relation_net_scheduler.step(epoch)
+
             # Evaluate model
+            train_acc = self.evaluate_model(train_dset) # Should ideally evaluate on all, but okay to have estimate
             test_acc = self.evaluate_model(test_dset)
 
-            iterator.set_description("Epoch %d | Train Loss: %.3f | Train Acc: %.3f | Test Acc: %.3f" % (epoch + 1,
-                running_loss / self.args['train_num_task'],
-                running_acc / self.args['train_num_task'],
-                test_acc))
-
-            feat_encoder_scheduler.step()
-            relation_net_scheduler.step()
-
-            train_acc = self.evaluate_model(train_dset)
+            iterator.set_description("Epoch %d | Train Acc: %.3f | Test Acc: %.3f" % (epoch + 1, train_acc, test_acc))
             self.logger.debug('train acc: %s | test acc: %s' % (train_acc, test_acc,))
 
         if self.args['is_dp_defense']:
@@ -136,24 +129,30 @@ class RelationNet(FewShotBase):
         else:
             return train_acc, test_acc
 
-    def evaluate_model(self, test_dset):
-        self.feat_encoder.eval()
+    def evaluate_model(self, test_dset, train_num_task_use: int = None):
         self.model.eval()
+        if not self.args['improper_evals']:
+            self.feat_encoder.eval()
 
         test_loader = DataLoader(test_dset, pin_memory=True, shuffle=True)
 
         loss_ctr = 0
         n_acc = 0
-        for i, (data, labels) in enumerate(test_loader):
+        if train_num_task_use is None:
+            train_num_task_use = self.args['test_num_task']
+
+        for i in range(train_num_task_use):
+            data, labels = next(iter(test_loader))
             _, _, acc = self.fast_adapt(data, labels, self.args['way'], self.args['shot'], self.args['test_num_query'])
             loss_ctr += 1
-            n_acc += acc
+            n_acc += acc.item()
 
-        return (n_acc / loss_ctr).item()
+        return (n_acc / loss_ctr)
 
     def probe_model(self, probe_dset):
-        self.feat_encoder.eval()
         self.model.eval()
+        if not self.args['improper_evals_attack_time']:
+            self.feat_encoder.eval()
         probe_loader = DataLoader(probe_dset, pin_memory=True, shuffle=True)
         ret_logit = []
         train_class = []
@@ -172,10 +171,11 @@ class RelationNet(FewShotBase):
         return np.stack(ret_logit), torch.stack(train_class).numpy(), torch.cat(batch_similarity).numpy()
 
     def probe_model_full(self, probe_dset):
-        self.feat_encoder.eval()
-        self.feat_encoder.to(self.device)
         self.model.eval()
         self.model.to(self.device)
+        if not self.args['improper_evals_attack_time']:
+            self.feat_encoder.eval()
+        self.feat_encoder.to(self.device)
 
         probe_loader = DataLoader(probe_dset, pin_memory=True, shuffle=True)
         ret_logit = []
@@ -216,7 +216,8 @@ class RelationNet(FewShotBase):
         sample_features = sample_features.view(ways, shot, self.feat_dim,
                                                sample_features.shape[2],
                                                sample_features.shape[3])
-        sample_features = torch.mean(sample_features, 1).squeeze(1)
+        sample_features = torch.sum(sample_features, 1).squeeze(1)
+        # sample_features = torch.mean(sample_features, 1).squeeze(1) # mean makes more sense to me, but original paper used sum
         batch_features = self.feat_encoder(batches)  # 20x64*5*5
 
         # calculate relations
@@ -271,8 +272,12 @@ class RelationNet(FewShotBase):
         return batch_features
 
     def generate_embeddings(self, probe_dset):
-        self.feat_encoder.eval()
-        self.feat_encoder.to(self.device)
+        if not self.args['improper_evals_attack_time']:
+            self.feat_encoder.eval()
+            self.feat_encoder.to(self.device)
+        else:
+            self.model.eval()
+            self.model.to(self.device)
 
         probe_loader = DataLoader(probe_dset, pin_memory=True, shuffle=True)
         ret_embeddings = []

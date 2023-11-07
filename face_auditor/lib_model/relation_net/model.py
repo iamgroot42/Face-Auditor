@@ -10,27 +10,29 @@ from face_auditor.lib_model.backbone_models.mobilenet import mobilenet_v2
 from face_auditor.lib_model.backbone_models.googlenet import googlenet
 
 
+MOMENTUM = 0.1
+
 class CNNEncoder(nn.Module):
     """docstring for CNNEncoder"""
     def __init__(self, in_channels=3):
         super(CNNEncoder, self).__init__()
         self.layer1 = nn.Sequential(
             nn.Conv2d(in_channels, 64, kernel_size=3, padding=0),
-            nn.BatchNorm2d(64, momentum=1, affine=True),
+            nn.BatchNorm2d(64, momentum=MOMENTUM, affine=True),
             nn.ReLU(),
             nn.MaxPool2d(2))
         self.layer2 = nn.Sequential(
             nn.Conv2d(64, 64, kernel_size=3, padding=0),
-            nn.BatchNorm2d(64, momentum=1, affine=True),
+            nn.BatchNorm2d(64, momentum=MOMENTUM, affine=True),
             nn.ReLU(),
             nn.MaxPool2d(2))
         self.layer3 = nn.Sequential(
             nn.Conv2d(64, 64, kernel_size=3, padding=1),
-            nn.BatchNorm2d(64, momentum=1, affine=True),
+            nn.BatchNorm2d(64, momentum=MOMENTUM, affine=True),
             nn.ReLU())
         self.layer4 = nn.Sequential(
             nn.Conv2d(64, 64, kernel_size=3, padding=1),
-            nn.BatchNorm2d(64, momentum=1, affine=True),
+            nn.BatchNorm2d(64, momentum=MOMENTUM, affine=True),
             nn.ReLU())
 
     def forward(self, x):
@@ -57,21 +59,21 @@ feature_extractor_backbone = {
         nn.Sequential(
             nn.Sequential(
             nn.Conv2d(in_channels, 64, kernel_size=3, padding=0),
-            nn.BatchNorm2d(64, momentum=1, affine=True),
+            nn.BatchNorm2d(64, momentum=MOMENTUM, affine=True),
             nn.ReLU(),
             nn.MaxPool2d(2)),
             nn.Sequential(
             nn.Conv2d(64, 64, kernel_size=3, padding=0),
-            nn.BatchNorm2d(64, momentum=1, affine=True),
+            nn.BatchNorm2d(64, momentum=MOMENTUM, affine=True),
             nn.ReLU(),
             nn.MaxPool2d(2)),
             nn.Sequential(
             nn.Conv2d(64, 64, kernel_size=3, padding=1),
-            nn.BatchNorm2d(64, momentum=1, affine=True),
+            nn.BatchNorm2d(64, momentum=MOMENTUM, affine=True),
             nn.ReLU()),
             nn.Sequential(
             nn.Conv2d(64, 64, kernel_size=3, padding=1),
-            nn.BatchNorm2d(64, momentum=1, affine=True),
+            nn.BatchNorm2d(64, momentum=MOMENTUM, affine=True),
             nn.ReLU())
         ),
     "FaceNet": 
@@ -80,7 +82,7 @@ feature_extractor_backbone = {
             *(list(InceptionResnetV1(pretrained='casia-webface').eval().children())[:-1])),
             nn.Sequential(
             nn.Conv2d(64, 64, kernel_size=3, padding=1),
-            nn.BatchNorm2d(64, momentum=1, affine=True),
+            nn.BatchNorm2d(64, momentum=MOMENTUM, affine=True),
             nn.ReLU())
         ),
 
@@ -97,7 +99,7 @@ feature_extractor_backbone = {
             *(list(resnet50(pretrained=True).children())[:-1])),
             nn.Sequential(
             nn.Conv2d(512, 64, kernel_size=1, padding=0),
-            nn.BatchNorm2d(64, momentum=1, affine=True),
+            nn.BatchNorm2d(64, momentum=MOMENTUM, affine=True),
             nn.ReLU())
         ),
     "MobileNet": 
@@ -106,7 +108,7 @@ feature_extractor_backbone = {
             *(list(mobilenet_v2(pretrained=True).children())[:-1])),
             nn.Sequential(
             nn.Conv2d(1280, 64, kernel_size=1, padding=0),
-            nn.BatchNorm2d(64, momentum=1, affine=True),
+            nn.BatchNorm2d(64, momentum=MOMENTUM, affine=True),
             nn.ReLU())
         ),
     "GoogleNet": 
@@ -115,7 +117,7 @@ feature_extractor_backbone = {
             *(list(googlenet(pretrained=True).children())[:-1])),  # image size should be N x 3 x 224 x 224
             nn.Sequential(
             nn.Conv2d(1024, 64, kernel_size=1, padding=0),
-            nn.BatchNorm2d(64, momentum=1, affine=True),
+            nn.BatchNorm2d(64, momentum=MOMENTUM, affine=True),
             nn.ReLU())
         ),
 }
@@ -134,19 +136,29 @@ class FeatureEncoder(nn.Module):
 
 class RelationNetwork(nn.Module):
     """docstring for RelationNetwork"""
-    def __init__(self, input_size, hidden_size):
+    def __init__(self, input_size, hidden_size, image_dim):
+        self.multiplier_maping = {
+            32: 1,
+            84: 3,
+            96: 5,
+            112: 6,
+            160: 9,
+            224: 13
+        }
+
         super(RelationNetwork, self).__init__()
         self.layer1 = nn.Sequential(
             nn.Conv2d(64*2, 64, kernel_size=3, padding=1),
-            nn.BatchNorm2d(64, momentum=1, affine=True),
+            nn.BatchNorm2d(64, momentum=MOMENTUM, affine=True),
             nn.ReLU(),
             nn.MaxPool2d(2))
         self.layer2 = nn.Sequential(
             nn.Conv2d(64, 64, kernel_size=3, padding=1),
-            nn.BatchNorm2d(64, momentum=1, affine=True),
+            nn.BatchNorm2d(64, momentum=MOMENTUM, affine=True),
             nn.ReLU(),
             nn.MaxPool2d(2))
-        self.fc1 = nn.Linear(input_size*5*5, hidden_size) # image_size: value. (32: 64*1*1) (84: 64*3*3) (96: 64*5*5) (112: 64*6*6) (160: 64*9*9) (224: 64*13*13)
+        # image_size: value. (32: 64*1*1) (84: 64*3*3) (96: 64*5*5) (112: 64*6*6) (160: 64*9*9) (224: 64*13*13)
+        self.fc1 = nn.Linear(input_size*self.multiplier_maping[image_dim]*self.multiplier_maping[image_dim], hidden_size)
         self.fc2 = nn.Linear(hidden_size, 1)
 
     def forward(self, x):

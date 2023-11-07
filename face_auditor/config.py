@@ -1,4 +1,5 @@
-WORKDIR = "/p/adversarialml/as9rw/Face-Auditor/WORKDIR/"
+WORKDIR = "/p/distinf/Face-Auditor/WORKDIR/"
+# WORKDIR = "/p/adversarialml/as9rw/Face-Auditor/WORKDIR/"
 # WORKDIR = "/u/as9rw/work/Face-Auditor/WORKDIR/"
 DATADIR = WORKDIR + "temp_data/"
 # exp related

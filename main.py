@@ -1,5 +1,4 @@
 import logging
-import yaml
 import os
 import torch
 
@@ -51,5 +50,6 @@ def main(args):
 
 if __name__ == "__main__":
     args = parameter_parser()
-        
+    print(args)
+
     main(args)
